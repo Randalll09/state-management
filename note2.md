@@ -339,3 +339,238 @@ form에 아무것도 적지 않고 submit하면 아래와 같은 객체를 반�
           placeholder="Write First Name"
         />
 ```
+
+## 6.8 Form Errors
+
+Validation을 위해 RegExp라는 것을 사용해보자. RegExp는 코드에 문자열이 어떤 종류인지 설명해주는 역할을 한다.
+
+```JavaScript
+/^[A-Za-z0-9._%+-]+@naver.com$/
+```
+
+위 RegExp 는 영어 대소문자, 숫자 또는 .\_%+- 로 이루어진 문자열로 시작해 @naver.com으로 끝난다는 의미다.
+
+register의 pattern에 RegExp를 넣으면 문자열 패턴을 검사할 수 있다.
+
+```JavaScript
+        <input
+          {...register('email', {
+            required: true,
+            pattern: /^[A-Za-z0-9._%+-]+@naver.com$/,
+          })}
+          placeholder="Write email"
+        />
+```
+
+만약 네이버 이메일이 아닌 메일주소를 적으면 에러가 나고, 네이버 이메일주소를 적으면 통과한다.
+
+에러 메세지를 띄우려면 아래와 같이 해주면 된다.
+
+```JavaScript
+<input
+          {...register('email', {
+            required: true,
+            pattern: {
+              value: /^[A-Za-z0-9._%+-]+@naver.com$/,
+              message: 'Only Naver is allowed',
+            },
+          })}
+          placeholder="Write email"
+        />
+```
+
+이제 사용자에게 에러메세지를 띄워보자. 현재 에러에는 required에러와 pattern에러가 있다. formState에서 error를 분리하자.
+
+```JavaScript
+  const { register, handleSubmit, formState:{errors} } = useForm();
+
+```
+
+span안에 이메일 input의 에러를 보여줄건데 에러의 메세지를 타입별로 지정할수 있으니 굳이 에러의 타입을 분간할 필요가 없다.
+
+```JavaScript
+        <input
+          {...register('email', {
+            required: 'Email is Required',
+            pattern: {
+              value: /^[A-Za-z0-9._%+-]+@naver.com$/,
+              message: 'Only Naver is allowed',
+            },
+          })}
+          placeholder="Write email"
+        />
+        <span>{errors.email?.message}</span>
+```
+
+나는 여기서 에러가 나 interface 를 만들어서 지정했다.
+
+```JavaScript
+
+interface IFormData {
+  [key: string]: string;
+}
+.
+.
+.
+  const {register,handleSubmit,formState: { errors },} = useForm<IFormData>();
+```
+
+사용자가 제출하고 나면 에러 메세지가 뜬다. 그리고 나서 수정하면 실시간으로 에러가 사라진다.
+
+또한 default value 라는 것이 있다.
+
+제대로 된 interface를 다시 만들어주고 defaultValues 를 지정해주자.
+
+```JavaScript
+interface IFormData {
+  firstName: string;
+  lastName: string;
+  userName: string;
+  password: string;
+  email: string;
+}
+.
+.
+.
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<IFormData>({
+    defaultValues: {
+      firstName: 'name',
+      lastName: 'last',
+    },
+  });
+```
+
+defaultValues에 지정한 값이 form에 기본값으로 들어가 있는걸 볼 수 있다.
+
+## 6.9 Custom Validation
+
+에러를 발생시키는 방법을 배워보자. 예컨대 유저이름을 api로 검사하거나 하는 방식을 쓰면 에러 발생이 필요하다.
+
+password와 password 확인이 다를 때 에러를 발생시켜보자. useForm에 setError를 추가하고 둘의 입력값이 같은지 확인하는 함수를 만들자.
+
+```JavaScript
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setError
+  } = useForm<IFormData>({
+    defaultValues: {
+      firstName: 'name',
+      lastName: 'last',
+    },
+  });
+    const onValid = (data: IFormData) => {
+    if (data.password !== data.passwordCheck) {
+      setError('passwordCheck', { message: 'Passwords are not the same' });
+    }
+  };
+```
+
+아니면 전체 폼에 대한 에러를 설정 할 수도 있다. IFormData에 extraError라는 항목을 추가해주자.
+
+```JavaScript
+interface IFormData {
+  firstName: string;
+  lastName: string;
+  userName: string;
+  password: string;
+  passwordCheck: string;
+  email: string;
+  extraError?: string;
+}
+.
+.
+.
+    setError('extraError', { message: 'serverOffline' });
+    .
+    .
+    .
+        <span>{errors.extraError?.message}</span>
+
+
+```
+
+extraError는 특정 항목에 대한 에러가 아닌 폼 전체에 대한 에러이다.
+
+setError의 또 다른 장점은 특정 input에 focus 시킬수 있단 점이다. 이는 shouldFocus 객체로 처리 할 수 있다.
+
+```JavaScript
+      setError('passwordCheck', { message: 'Passwords are not the same' },{shouldFocus:true});
+
+```
+
+또한 register에 validate 옵션을 줄수도 있다. validate 은 함수를 값으로 가지고 그 함수는 더이터 값을 인자로 가지며 true나 false를 return한다.
+
+```JavaScript
+        <input
+          {...register('lastName', {
+            required: 'password is required',
+            validate: (value) => value.includes("Na"),
+          })}
+          placeholder="Write Last Name"
+        />
+```
+
+또한 문자열을 return 할수도 있다. 아래와 같이 하면 오류로 hello 가 뜬다. 만약 문자열을 return하면 에러메세지를 return한다는 의미다.
+
+```JavaScript
+    <input
+          {...register('lastName', {
+            required: 'password is required',
+            validate: (value) => 'hello',
+          })}
+          placeholder="Write Last Name"
+        />
+        <span>{errors.lastName?.message}</span>
+```
+
+아래의 input에 nico가 포함되면 에러 메세지가 보인다.
+
+```JavaScript
+        <input
+          {...register('lastName', {
+            required: 'password is required',
+            validate: (value) =>
+              value.includes('nico') ? 'no nico allowed' : true,
+          })}
+          placeholder="Write Last Name"
+        />
+        <span>{errors.lastName?.message}</span>
+```
+
+validate에 여러 요소 들이 필요할 때도 있다. 그럴 땐 validate을 객체로 만들고 그 안에 항목을 넣으면 된다.
+
+```JavaScript
+<input
+          {...register('lastName', {
+            required: 'password is required',
+            validate: {
+              noNico: (value) =>
+                value.includes('nico') ? 'no nicos allowed' : true,
+              noNick: (value) =>
+                value.includes('nick') ? 'no nicks allowed' : true,
+            },
+          })}
+          placeholder="Write Last Name"
+        />
+```
+
+validate에 규칙 항목의 이름은 원하는 대로 적어둘수 있다. validate 함수를 async로 만들어 서버에 확인하고 응답을 받을 수도 있다.
+
+## 6.10 Recap
+
+useForm에는 setValue라는 함수도 있다.
+
+```JavaScript
+  const onSubmit = (data: IForm) => {
+    console.log('add to do', data.todo);
+    setValue('todo', '');
+  };
+```
+
+위와 같이 하면 submit시에 to do의 값이 ""가 된다.

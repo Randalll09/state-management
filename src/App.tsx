@@ -1,5 +1,7 @@
 import { createGlobalStyle } from 'styled-components';
-import ToDoList from './ToDoList';
+import Form from './Form';
+import ToDo from './ToDo';
+import ToDoPage from './ToDoPage';
 
 const GlobalStyle = createGlobalStyle`
   body{
@@ -26,7 +28,8 @@ function App() {
   return (
     <>
       <GlobalStyle />
-      <ToDoList />
+      {/* <ToDo /> */}
+      <ToDoPage />
     </>
   );
 }

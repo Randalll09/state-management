@@ -5,6 +5,7 @@ import {
   useRecoilValue,
   useSetRecoilState,
 } from 'recoil';
+import { todoSelector } from './atoms';
 
 interface IForm {
   todo: string;
@@ -23,6 +24,7 @@ const todoState = atom<ITodo[]>({
 
 const ToDo = () => {
   const [todos, setTodos] = useRecoilState(todoState);
+
   const { register, handleSubmit, setValue } = useForm<IForm>();
   const onSubmit = (data: IForm) => {
     setValue('todo', '');

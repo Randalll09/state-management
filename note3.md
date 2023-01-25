@@ -218,7 +218,7 @@ export default ToDoEl;
 ```JavaScript
 import { ITodo } from './atoms';
 
-const ToDoEl = ({ text, category }: ITodo) => {
+const ToDoEl = ({ text, category, id }: ITodo) => {
   const onClick = (newCat: ITodo['category']) => {};
   return (
     <li>
@@ -243,7 +243,30 @@ export default ToDoEl;
 또는 인자를 직접받는 함수를 만들 수도 있다. 각버튼에 이름을 지정해주고 이벤트 함수로 버튼을 불러오는 것이다.
 
 ```JavaScript
+  const onClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    console.log(e.currentTarget.name);
+  };
+  .
+  .
+  .
+   <button name="TO_DO" onClick={onClick}>
+          To do
+        </button>
 
 ```
 
-5:23
+아래와 같이 버튼의 name값을 가져오자.
+
+```JavaScript
+  const onClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const {
+      currentTarget: { name },
+    } = e;
+  };
+```
+
+이제 atom을 수정해보자. setTodos 함수를 만들자.
+
+```JavaScript
+  const setToDos=useSetRecoilState(todoState)
+```
